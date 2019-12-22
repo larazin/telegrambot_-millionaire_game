@@ -23,14 +23,14 @@ button_start_game = telebot.types.KeyboardButton('Начать игру')
 button_score = telebot.types.KeyboardButton('Счет')
 button_change_level = telebot.types.KeyboardButton('Смени уровень сложности')
 button_show_level = telebot.types.KeyboardButton('Покажи уровень сложности')
-main_keyboard = telebot.types.ReplyKeyboardMarkup()
+main_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
 main_keyboard.add(
     button_start_game, button_score, button_change_level, button_show_level
 )
-change_level_keyboard = telebot.types.ReplyKeyboardMarkup().row(
+change_level_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True).row(
     button1, button2, button3
 )
-game_keyboard = telebot.types.ReplyKeyboardMarkup()
+game_keyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
 game_keyboard.row(
     button1, button2, button3, button4
 )
@@ -59,7 +59,6 @@ def get_user_attribute(user_id, attribute):
     return user[attribute]
 
 
-
 def set_user_attribute(user_id, attribute, new_value):
     user_data = redis_load(user_id)
     user_data[attribute] = new_value
@@ -73,14 +72,16 @@ def main_handler(message):
     if message.text == '/start':
         name = message.from_user.first_name
         set_user_attribute(user_id, 'name', name)
-        bot.send_message(user_id, 'Это бот-игра в "Кто хочет стать миллионером', reply_markup=main_keyboard)
+        bot.send_message(user_id, 'Это бот-игра в "Кто хочет стать миллионером',
+                         reply_markup=main_keyboard)
     elif message.text.lower() == 'привет':
         bot.send_message(user_id, 'Ну привет!')
     elif message.text in ['Начать игру', '/start_game']:
         exercise(message.from_user.id)
         set_user_attribute(user_id, 'state', GAME_STATE)
     elif message.text in ['Смени уровень сложности', '/change_level']:
-        bot.send_message(user_id, 'На какой уровень сложности сменить? От 1 до 3', reply_markup=change_level_keyboard)
+        bot.reply_to(message, 'На какой уровень сложности сменить? От 1 до 3',
+                     reply_markup=change_level_keyboard)
         set_user_attribute(user_id, 'state', LEVEL_STATE)
     elif message.text in ['Покажи уровень сложности', '/level']:
         a_level = 'Твой текущий уровень сложности: {}'.format(get_user_attribute(user_id, 'level_id'))
@@ -146,5 +147,6 @@ def exercise(user_id):
 
 
 if __name__ == '__main__':
-    game = {'victories': 0, 'defeats': 0, 'right_answer_index': 0, 'level_id': 1, 'name': 0, 'state': MAIN_STATE}
+    game = {'victories': 0, 'defeats': 0, 'right_answer_index': 0,
+            'level_id': 1, 'name': 0, 'state': MAIN_STATE}
     bot.polling()
