@@ -56,7 +56,10 @@ def get_user_attribute(user_id, attribute):
     if user is None:
         user = game.copy()  # Добавляется пользователь
         redis_save(user_id, user)
-    return user[attribute]
+    if attribute in user:
+        return user[attribute]
+    else:
+        return None
 
 
 def set_user_attribute(user_id, attribute, new_value):
@@ -136,7 +139,8 @@ def change_level(message):
 
 def exercise(user_id):
     task = requests.get(API_URL, params={'complexity': get_user_attribute(user_id, 'level_id')}).json()
-    if get_user_attribute(user_id, 'question') != task['question']:
+    prev_question = get_user_attribute(user_id, 'question')
+    if prev_question is None or prev_question != task['question']:
         set_user_attribute(user_id, 'question', task['question'])
         answer = task['answers'][0]
         random.shuffle(task['answers'])
