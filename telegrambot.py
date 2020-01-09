@@ -136,17 +136,21 @@ def change_level(message):
 
 def exercise(user_id):
     task = requests.get(API_URL, params={'complexity': get_user_attribute(user_id, 'level_id')}).json()
-    answer = task['answers'][0]
-    random.shuffle(task['answers'])
-    set_user_attribute(user_id, 'right_answer_index', task['answers'].index(answer))
-    answers = []
-    for index, value in enumerate(task['answers']):
-        answers.append('{}) {}'.format(index + 1, value))
-    question = '{}\n{}'.format(task['question'], "\n".join(answers))
-    bot.send_message(user_id, question, reply_markup=game_keyboard)
+    if get_user_attribute(user_id, 'question') != task['question']:
+        set_user_attribute(user_id, 'question', task['question'])
+        answer = task['answers'][0]
+        random.shuffle(task['answers'])
+        set_user_attribute(user_id, 'right_answer_index', task['answers'].index(answer))
+        answers = []
+        for index, value in enumerate(task['answers']):
+            answers.append('{}) {}'.format(index + 1, value))
+        question = '{}\n{}'.format(task['question'], "\n".join(answers))
+        bot.send_message(user_id, question, reply_markup=game_keyboard)
+    else:
+        exercise(user_id)
 
 
 if __name__ == '__main__':
     game = {'victories': 0, 'defeats': 0, 'right_answer_index': 0,
-            'level_id': 1, 'name': 0, 'state': MAIN_STATE}
+            'question': 0, 'level_id': 1, 'name': 0, 'state': MAIN_STATE}
     bot.polling()
